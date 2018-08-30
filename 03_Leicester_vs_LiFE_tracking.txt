@@ -1,0 +1,466 @@
+SIFT_tracking () {
+
+subj=$1
+data=/home/auguser2016/Projects/0001_Chiasm/$subj
+output=/home/auguser2016/Projects/Leicester_vs_LiFE
+
+mkdir $output/SIFT
+cd $output
+
+# Generate tractogram
+
+lmax="6 8 10"
+FAs="0.03 0.06"
+Curv="30 45 60"
+
+tt_image=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/5TTs_ACPC_Aligned_Chiasm_T1_Corrected/${subj::4}_t1_acpc_5tt_corrected.nii.gz
+
+for i in $lmax; do
+  for j in $FAs; do
+    for k in $Curv; do
+    	echo $i $j $k;#tckgen $data/$subj\_acpc_FOD_lmax_$i.mif SIFT/$subj\_results_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_dynamic $data/$subj\_acpc_FOD_lmax_$i.mif -act $tt_image -backtrack -select $sift_no ; 
+    done
+  done
+done
+
+cd $output/SIFT/ToBeDone
+
+#mkdir $subj
+
+#tckedit $subj\_*.tck $subj/$subj\_to_be_SIFTED.tck
+
+tcksift $subj/$subj\_to_be_SIFTED.tck $data/$subj\_acpc_FOD_lmax_8.mif $subj/$subj\_SIFTED.tck -act $tt_image
+
+#rm *.tck
+
+}
+
+
+
+
+Leicester_CSD_seed () {
+
+subj=$1
+data=/home/auguser2016/Projects/0001_Chiasm/$subj
+output=/home/auguser2016/Projects/Leicester_vs_LiFE
+rois=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/Optic_Chiasm_ROIs/${subj::4}
+
+mkdir $output/Leicester_CSD_seed
+cd $output
+
+# SFR Estimation
+#lmax=6 #This should be as low as possible, optimal for most participants value #SFR for lower lmax, keep it and use higher 8,10,12 for fod estimation OR Get SFR with optimal lmax for most participants and use given lmax for all participants. Lower lmax preffered
+#dwi2response tournier $data/$subj\_clean_075mm.mif -shell 1600 -lmax $lmax -mask $data/$subj\_clean_075mm_mask.mif $output/$subj\_sfr.txt -voxels $data/Temporal/$subj\_SFR_voxels.mif
+
+# Estimation of Fiber Orientation Distribution function
+#for lmax in 8 10 12; do  
+#  dwiextract $data/$subj\_clean_075mm.mif - | dwi2fod msmt_csd - $output/$subj\_sfr.txt -lmax $lmax $output/$subj\_FOD_lmax_$lmax.mif -mask $data/$subj\_clean_075mm_mask.mif
+#done
+
+# Generation of 5TT image based on acpc registerred image
+#5ttgen fsl anatomy/$subj\_t1_acpc.nii.gz $subj\_5tt.nii.gz
+
+# Generate tractogram
+
+lmax="6 8 10"
+FAs="0.03 0.06"
+Curv="30 45 60"
+
+tt_image=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/5TTs_ACPC_Aligned_Chiasm_T1_Corrected/${subj::4}_t1_acpc_5tt_corrected.nii.gz
+
+#tt_image=$data/$subj\_t1_acpc_5tt_corrected.nii.gz
+#tt_image=$data/$subj\_t1_acpc_5tt.nii.gz
+
+for i in $lmax; do
+  for j in $FAs; do
+    for k in $Curv; do
+      echo $subj\_results_r_r_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_seed/$subj\_results_sr_er_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_seed/$subj\_results_sr_el_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_seed/$subj\_results_sl_er_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_seed/$subj\_results_sl_el_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ;
+      
+      echo $subj\_results_r_r_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_seed/$subj\_results_er_sr_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_er.mif -include $rois/$subj\_sr.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_seed/$subj\_results_er_sl_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_er.mif -include $rois/$subj\_sl.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_seed/$subj\_results_el_sr_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_el.mif -include $rois/$subj\_sr.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_seed/$subj\_results_el_sl_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_el.mif -include $rois/$subj\_sl.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+    done
+  done
+done
+
+
+
+cd $output/Leicester_CSD_seed
+
+mkdir $subj
+
+tckedit *.tck $subj/$subj\_ACT.tck -force
+tckedit $subj*sr_er*.tck *er_sr*.tck $subj/$subj\_r_r_ACT.tck -force
+tckedit $subj*sr_el*.tck *el_sr*.tck $subj/$subj\_r_l_ACT.tck -force
+tckedit $subj*sl_er*.tck *er_sl*.tck $subj/$subj\_l_r_ACT.tck -force
+tckedit $subj*sl_el*.tck *el_sl*.tck $subj/$subj\_l_l_ACT.tck -force
+
+rm *.tck
+
+}
+
+Leicester_DT_seed () {
+
+subj=$1
+data=/home/auguser2016/Projects/0001_Chiasm/$subj
+output=/home/auguser2016/Projects/Leicester_vs_LiFE
+rois=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/Optic_Chiasm_ROIs/${subj::4}
+
+mkdir $output/Leicester_DT_seed
+cd $output
+
+# SFR Estimation
+#lmax=6 #This should be as low as possible, optimal for most participants value #SFR for lower lmax, keep it and use higher 8,10,12 for fod estimation OR Get SFR with optimal lmax for most participants and use given lmax for all participants. Lower lmax preffered
+#dwi2response tournier $data/$subj\_clean_075mm.mif -shell 1600 -lmax $lmax -mask $data/$subj\_clean_075mm_mask.mif $output/$subj\_sfr.txt -voxels $data/Temporal/$subj\_SFR_voxels.mif
+
+# Estimation of Fiber Orientation Distribution function
+#for lmax in 8 10 12; do  
+#  dwiextract $data/$subj\_clean_075mm.mif - | dwi2fod msmt_csd - $output/$subj\_sfr.txt -lmax $lmax $output/$subj\_FOD_lmax_$lmax.mif -mask $data/$subj\_clean_075mm_mask.mif
+#done
+
+# Generation of 5TT image based on acpc registerred image
+#5ttgen fsl anatomy/$subj\_t1_acpc.nii.gz $subj\_5tt.nii.gz
+
+# Generate tractogram
+
+lmax="6 8 10"
+FAs="0.03 0.06"
+Curv="30 45 60"
+
+tt_image=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/5TTs_ACPC_Aligned_Chiasm_T1_Corrected/${subj::4}_t1_acpc_5tt_corrected.nii.gz
+
+# create legit .mif file to be input to tckgen
+
+  for j in $FAs; do
+    for k in $Curv; do
+      echo $subj\_results_r_r_$i\_$j\_$k
+ 
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_seed/$subj\_results_sr_er_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_seed/$subj\_results_sr_el_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_seed/$subj\_results_sl_er_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_seed/$subj\_results_sl_el_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+    
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_seed/$subj\_results_er_sr_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_er.mif -include $rois/$subj\_sr.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_seed/$subj\_results_er_sl_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_er.mif -include $rois/$subj\_sl.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_seed/$subj\_results_el_sr_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_el.mif -include $rois/$subj\_sr.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_seed/$subj\_results_el_sl_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_el.mif -include $rois/$subj\_sl.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+    
+    done
+  done
+  
+
+cd $output/Leicester_DT_seed
+
+mkdir $subj
+
+tckedit *.tck $subj/$subj\_ACT.tck -force
+tckedit $subj*sr_er*.tck *er_sr*.tck $subj/$subj\_r_r_ACT.tck -force
+tckedit $subj*sr_el*.tck *el_sr*.tck $subj/$subj\_r_l_ACT.tck -force
+tckedit $subj*sl_er*.tck *er_sl*.tck $subj/$subj\_l_r_ACT.tck -force
+tckedit $subj*sl_el*.tck *el_sl*.tck $subj/$subj\_l_l_ACT.tck -force
+
+rm *.tck
+
+}
+
+Leicester_CSD_selected () {
+
+subj=$1
+data=/home/auguser2016/Projects/0001_Chiasm/$subj
+output=/home/auguser2016/Projects/Leicester_vs_LiFE
+rois=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/Optic_Chiasm_ROIs/${subj::4}
+
+mkdir $output/Leicester_CSD_selected
+cd $output
+
+# SFR Estimation
+#lmax=6 #This should be as low as possible, optimal for most participants value #SFR for lower lmax, keep it and use higher 8,10,12 for fod estimation OR Get SFR with optimal lmax for most participants and use given lmax for all participants. Lower lmax preffered
+#dwi2response tournier $data/$subj\_clean_075mm.mif -shell 1600 -lmax $lmax -mask $data/$subj\_clean_075mm_mask.mif $output/$subj\_sfr.txt -voxels $data/Temporal/$subj\_SFR_voxels.mif
+
+# Estimation of Fiber Orientation Distribution function
+#for lmax in 8 10 12; do  
+#  dwiextract $data/$subj\_clean_075mm.mif - | dwi2fod msmt_csd - $output/$subj\_sfr.txt -lmax $lmax $output/$subj\_FOD_lmax_$lmax.mif -mask $data/$subj\_clean_075mm_mask.mif
+#done
+
+# Generation of 5TT image based on acpc registerred image
+#5ttgen fsl anatomy/$subj\_t1_acpc.nii.gz $subj\_5tt.nii.gz
+
+# Generate tractogram
+
+lmax="6 8 10"
+FAs="0.03 0.06"
+Curv="30 45 60"
+
+tt_image=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/5TTs_ACPC_Aligned_Chiasm_T1_Corrected/${subj::4}_t1_acpc_5tt_corrected.nii.gz
+
+#tt_image=$data/$subj\_t1_acpc_5tt_corrected.nii.gz
+#tt_image=$data/$subj\_t1_acpc_5tt.nii.gz
+
+for i in $lmax; do
+  for j in $FAs; do
+    for k in $Curv; do
+      echo $subj\_results_r_r_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_selected/$subj\_results_sr_er_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_selected/$subj\_results_sr_el_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_selected/$subj\_results_sl_er_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_selected/$subj\_results_sl_el_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+     
+      echo $subj\_results_r_r_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_selected/$subj\_results_er_sr_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_er.mif -include $rois/$subj\_sr.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_selected/$subj\_results_er_sl_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_er.mif -include $rois/$subj\_sl.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_selected/$subj\_results_el_sr_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_el.mif -include $rois/$subj\_sr.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen $data/$subj\_acpc_FOD_lmax_$i.mif Leicester_CSD_selected/$subj\_results_el_sl_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_el.mif -include $rois/$subj\_sl.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+       
+    done
+  done
+done
+
+
+
+cd $output/Leicester_CSD_selected
+
+mkdir $subj
+
+tckedit *.tck $subj/$subj\_ACT.tck -force
+tckedit $subj*sr_er*.tck *er_sr*.tck $subj/$subj\_r_r_ACT.tck -force
+tckedit $subj*sr_el*.tck *el_sr*.tck $subj/$subj\_r_l_ACT.tck -force
+tckedit $subj*sl_er*.tck *er_sl*.tck $subj/$subj\_l_r_ACT.tck -force
+tckedit $subj*sl_el*.tck *el_sl*.tck $subj/$subj\_l_l_ACT.tck -force
+
+rm *.tck
+
+}
+
+Leicester_DT_selected () {
+
+subj=$1
+data=/home/auguser2016/Projects/0001_Chiasm/$subj
+output=/home/auguser2016/Projects/Leicester_vs_LiFE
+rois=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/Optic_Chiasm_ROIs/${subj::4}
+
+mkdir $output/Leicester_DT_selected
+cd $output
+
+# SFR Estimation
+#lmax=6 #This should be as low as possible, optimal for most participants value #SFR for lower lmax, keep it and use higher 8,10,12 for fod estimation OR Get SFR with optimal lmax for most participants and use given lmax for all participants. Lower lmax preffered
+#dwi2response tournier $data/$subj\_clean_075mm.mif -shell 1600 -lmax $lmax -mask $data/$subj\_clean_075mm_mask.mif $output/$subj\_sfr.txt -voxels $data/Temporal/$subj\_SFR_voxels.mif
+
+# Estimation of Fiber Orientation Distribution function
+#for lmax in 8 10 12; do  
+#  dwiextract $data/$subj\_clean_075mm.mif - | dwi2fod msmt_csd - $output/$subj\_sfr.txt -lmax $lmax $output/$subj\_FOD_lmax_$lmax.mif -mask $data/$subj\_clean_075mm_mask.mif
+#done
+
+# Generation of 5TT image based on acpc registerred image
+#5ttgen fsl anatomy/$subj\_t1_acpc.nii.gz $subj\_5tt.nii.gz
+
+# Generate tractogram
+
+lmax="6 8 10"
+FAs="0.03 0.06"
+Curv="30 45 60"
+
+tt_image=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/5TTs_ACPC_Aligned_Chiasm_T1_Corrected/${subj::4}_t1_acpc_5tt_corrected.nii.gz
+
+# create legit .mif file to be input to tckgen
+
+  for j in $FAs; do
+    for k in $Curv; do
+      echo $subj\_results_r_r_$i\_$j\_$k
+ 
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_selected/$subj\_results_sr_er_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_selected/$subj\_results_sr_el_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_selected/$subj\_results_sl_er_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_selected/$subj\_results_sl_el_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+    
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_selected/$subj\_results_er_sr_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_er.mif -include $rois/$subj\_sr.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_selected/$subj\_results_er_sl_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_er.mif -include $rois/$subj\_sl.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_selected/$subj\_results_el_sr_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_el.mif -include $rois/$subj\_sr.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Prob  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT_selected/$subj\_results_el_sl_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_el.mif -include $rois/$subj\_sl.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+    
+    
+    done
+  done
+  
+
+cd $output/Leicester_DT_selected
+
+mkdir $subj
+
+tckedit *.tck $subj/$subj\_ACT.tck -force
+tckedit $subj*sr_er*.tck *er_sr*.tck $subj/$subj\_r_r_ACT.tck -force
+tckedit $subj*sr_el*.tck *el_sr*.tck $subj/$subj\_r_l_ACT.tck -force
+tckedit $subj*sl_er*.tck *er_sl*.tck $subj/$subj\_l_r_ACT.tck -force
+tckedit $subj*sl_el*.tck *el_sl*.tck $subj/$subj\_l_l_ACT.tck -force
+
+rm *.tck
+}
+
+Leicester_DT2_seed () {
+
+subj=$1
+data=/home/auguser2016/Projects/0001_Chiasm/$subj
+output=/home/auguser2016/Projects/Leicester_vs_LiFE
+rois=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/Optic_Chiasm_ROIs/${subj::4}
+
+mkdir $output/Leicester_DT2_seed
+cd $output
+
+# SFR Estimation
+#lmax=6 #This should be as low as possible, optimal for most participants value #SFR for lower lmax, keep it and use higher 8,10,12 for fod estimation OR Get SFR with optimal lmax for most participants and use given lmax for all participants. Lower lmax preffered
+#dwi2response tournier $data/$subj\_clean_075mm.mif -shell 1600 -lmax $lmax -mask $data/$subj\_clean_075mm_mask.mif $output/$subj\_sfr.txt -voxels $data/Temporal/$subj\_SFR_voxels.mif
+
+# Estimation of Fiber Orientation Distribution function
+#for lmax in 8 10 12; do  
+#  dwiextract $data/$subj\_clean_075mm.mif - | dwi2fod msmt_csd - $output/$subj\_sfr.txt -lmax $lmax $output/$subj\_FOD_lmax_$lmax.mif -mask $data/$subj\_clean_075mm_mask.mif
+#done
+
+# Generation of 5TT image based on acpc registerred image
+#5ttgen fsl anatomy/$subj\_t1_acpc.nii.gz $subj\_5tt.nii.gz
+
+# Generate tractogram
+
+lmax="6 8 10"
+FAs="0.03 0.06"
+Curv="30 45 60"
+
+tt_image=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/5TTs_ACPC_Aligned_Chiasm_T1_Corrected/${subj::4}_t1_acpc_5tt_corrected.nii.gz
+
+# create legit .mif file to be input to tckgen
+
+  for j in $FAs; do
+    for k in $Curv; do
+      echo $subj\_results_r_r_$i\_$j\_$k
+ 
+      tckgen -algorithm Tensor_Det  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT2_seed/$subj\_results_r_r_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Det  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT2_seed/$subj\_results_r_l_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen -algorithm Tensor_Det  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT2_seed/$subj\_results_l_r_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Det  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT2_seed/$subj\_results_l_l_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select 0 -seeds  $seeds_no ; 
+    done
+  done
+  
+
+cd $output/Leicester_DT2_seed
+
+mkdir $subj
+
+tckedit *.tck $subj/$subj\_ACT.tck -force
+tckedit $subj*sr_er*.tck *er_sr*.tck $subj/$subj\_r_r_ACT.tck -force
+tckedit $subj*sr_el*.tck *el_sr*.tck $subj/$subj\_r_l_ACT.tck -force
+tckedit $subj*sl_er*.tck *er_sl*.tck $subj/$subj\_l_r_ACT.tck -force
+tckedit $subj*sl_el*.tck *el_sl*.tck $subj/$subj\_l_l_ACT.tck -force
+
+rm *.tck
+
+}
+
+Leicester_DT2_selected () {
+
+subj=$1
+data=/home/auguser2016/Projects/0001_Chiasm/$subj
+output=/home/auguser2016/Projects/Leicester_vs_LiFE
+rois=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/Optic_Chiasm_ROIs/${subj::4}
+
+mkdir $output/Leicester_DT2_selected
+cd $output
+
+# SFR Estimation
+#lmax=6 #This should be as low as possible, optimal for most participants value #SFR for lower lmax, keep it and use higher 8,10,12 for fod estimation OR Get SFR with optimal lmax for most participants and use given lmax for all participants. Lower lmax preffered
+#dwi2response tournier $data/$subj\_clean_075mm.mif -shell 1600 -lmax $lmax -mask $data/$subj\_clean_075mm_mask.mif $output/$subj\_sfr.txt -voxels $data/Temporal/$subj\_SFR_voxels.mif
+
+# Estimation of Fiber Orientation Distribution function
+#for lmax in 8 10 12; do  
+#  dwiextract $data/$subj\_clean_075mm.mif - | dwi2fod msmt_csd - $output/$subj\_sfr.txt -lmax $lmax $output/$subj\_FOD_lmax_$lmax.mif -mask $data/$subj\_clean_075mm_mask.mif
+#done
+
+# Generation of 5TT image based on acpc registerred image
+#5ttgen fsl anatomy/$subj\_t1_acpc.nii.gz $subj\_5tt.nii.gz
+
+# Generate tractogram
+
+lmax="6 8 10"
+FAs="0.03 0.06"
+Curv="30 45 60"
+
+tt_image=/home/auguser2016/dMRI_DATA/PREPROCESSED_DATA/5TTs_ACPC_Aligned_Chiasm_T1_Corrected/${subj::4}_t1_acpc_5tt_corrected.nii.gz
+
+# create legit .mif file to be input to tckgen
+
+  for j in $FAs; do
+    for k in $Curv; do
+      echo $subj\_results_r_r_$i\_$j\_$k
+ 
+      tckgen -algorithm Tensor_Det  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT2_selected/$subj\_results_r_r_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_r_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Det  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT2_selected/$subj\_results_r_l_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sr.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_r_$i\_$j\_$k
+      tckgen -algorithm Tensor_Det  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT2_selected/$subj\_results_l_r_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_er.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+      echo $subj\_results_l_l_$i\_$j\_$k
+      tckgen -algorithm Tensor_Det  $data/${subj}\_150mm_clean_aligned_trilin_noMEC.nii.gz -fslgrad $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvecs $data/${subj}\_150mm_clean_aligned_trilin_noMEC.bvals Leicester_DT2_selected/$subj\_results_l_l_$i\_$j\_$k.tck -cutoff $j -angle $k -seed_unidirectional -seed_image $rois/$subj\_sl.mif -include $rois/$subj\_el.mif -act $tt_image -stop -select $selected_no -seeds $seeds_no ; 
+    done
+  done
+  
+
+cd $output/Leicester_DT2_selected
+
+mkdir $subj
+
+tckedit *.tck $subj/$subj\_ACT.tck -force
+tckedit $subj*sr_er*.tck *er_sr*.tck $subj/$subj\_r_r_ACT.tck -force
+tckedit $subj*sr_el*.tck *el_sr*.tck $subj/$subj\_r_l_ACT.tck -force
+tckedit $subj*sl_er*.tck *er_sl*.tck $subj/$subj\_l_r_ACT.tck -force
+tckedit $subj*sl_el*.tck *el_sl*.tck $subj/$subj\_l_l_ACT.tck -force
+
+rm *.tck
+
+}
+
+seeds_no=139000
+selected_no=$(($seeds_no/1000))
+
+sift_no=1500000
+
+cd /home/auguser2016/Projects/0001_Chiasm
+for probanden in */; do 
+  Leicester_CSD_selected ${probanden::4}; 
+  Leicester_CSD_seed ${probanden::4}; 
+  #Leicester_DT2_selected ${probanden::4}; 
+  #Leicester_DT2_seed ${probanden::4};
+  Leicester_DT_selected ${probanden::4}; 
+  Leicester_DT_seed ${probanden::4}; 
+  #SIFT_tracking ${probanden::4}
+  
+done
+
