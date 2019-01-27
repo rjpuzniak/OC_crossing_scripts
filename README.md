@@ -8,7 +8,7 @@ How to repeat the analysis:
 
 LiFE Analysis 
 -------------
-1) Preprocessed data is uploaded to BL and is to be accessed here: https://brainlife.io/project/5aaa347ef0b5260027e24a96/detail (You have permission to access it)
+1) Preprocessed data is uploaded to BL and is to be accessed here: https://brainlife.io/project/5aaa347ef0b5260027e24a96/detail (You have permission to access it). The data was extracted from Siemens DICOMs and preprocessed using script 00_preprocess_chiasm.sh
 2) Run dtiInit on it - script 01_t1_and_dwi_to_acpc_chiasm.m
 3) Estimating SFR and ODFs from output of dtiInit - script 02_postprocess_chiasm.sh
 4) Script 03_Leicester_vs_LiFE_tracking.txt performs tracking - different approaches (CSD/DT, merged A->B and B->A, multiple parameters, 'seed' indicates fixed number of seeding attempts, 'select' indicates fixed number of streamlines we select for each group). Output will be saved to folder Leicester_XXX_YYY/SUBJ, where XXX is model used for tractography (CSD or DT), YYY is either SEED or SELECTED, SUBJ is subject's ID. Output consists of 5 files - 4 files SUBJ_? _?_ACT.tck where ? can be either r (r=right) or l (l=left). This indicate side of starting and ending ROI. File SUBJ_ACT.tck consists of 4 merged files SUBJ_?_?_ACT.tck. 
